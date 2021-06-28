@@ -37,7 +37,12 @@
 
     var markerRoot1;
 
+    var raycastObjects = []
+
     var material1, mesh1;
+
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
 
     initialize();
     animate();
@@ -45,7 +50,7 @@
     function initialize() {
       scene = new THREE.Scene();
 
-      camera = new THREE.PerspectiveCamera(45,1,1,1000);
+      camera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
       scene.add(camera);
 
       renderer = new THREE.WebGLRenderer({
@@ -121,8 +126,6 @@
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-      let domEvents=new THREEx.DomEvents(camera, renderer.domElement)
-
       let loader = new THREE.TextureLoader();
 
       let sceneGroup = new THREE.Group();
@@ -142,26 +145,7 @@
       shadowMesh.castShadow = true;
       shadowMesh.receiveShadow = true;
       sceneGroup.add(shadowMesh);
-
-      let clicked=false
-
-      domEvents.addEventListener(shadowMesh,'click',event=>{
-        if(!clicked){
-          shadowMesh.scale.set(0.2,0.2,0.2)
-        }
-        else{
-          shadowMesh.scale.set(1,1,1)
-        }
-        clicked=!clicked
-        console.log(clicked)
-      })
-
-
-      // shadowMesh.cursor = 'pointer';
-      // shadowMesh.on('click', function(ev) {
-      //   console.log("test")
-      // });
-
+      raycastObjects.push(shadowMesh);
 
       // let floader = new THREE.FBXLoader();
       // floader.load('assets/fbx/town.fbx', function (object) {
@@ -204,6 +188,61 @@
       // sceneGroup.add( helper );
     }
 
+
+    function onMouseMove(event) {
+
+      // calculate mouse position in normalized device coordinates
+      // (-1 to +1) for both components
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    }
+
+    function hover() {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(raycastObjects, true);
+      if (intersects[0]) {
+        intersects[0].object.material.transparent = true
+        intersects[0].object.material.opacity = 0.5
+      }
+    }
+
+    function resetMaterials() {
+      for (let i = 0; i < sceneGroup.children.length; i++) {
+        if (sceneGroup.children[i].material) {
+          sceneGroup.children[i].material.opacity = 1.0;
+        }
+      }
+    }
+
+    let clicked = false
+
+    function onClick(event) {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(raycastObjects, true);
+      if (intersects[0]) {
+        if (!clicked) {
+          intersects[0].object.scale.set(0.2, 0.2, 0.2)
+
+          clicked = true
+        }
+        else {
+          intersects[0].object.scale.set(1, 1, 1)
+
+          clicked = false
+        }
+
+        console.log(intersects, clicked)
+      }
+
+      console.log(intersects, clicked)
+    }
+
+
+    window.addEventListener('mousemove', onMouseMove, false);
+    window.addEventListener('click', onClick);
+
     function update() {
       // update artoolkit on every frame
       if (arToolkitSource.ready !== false)
@@ -222,6 +261,8 @@
       requestAnimationFrame(animate);
       deltaTime = clock.getDelta();
       totalTime += deltaTime;
+      // resetMaterials();
+      // hover();
       update();
       render();
     }
