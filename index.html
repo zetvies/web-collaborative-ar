@@ -246,6 +246,7 @@
       // interactables.add( helper );
     }
 
+    var isTouch =  !!("ontouchstart" in window) || window.navigator.msMaxTouchPoints > 0;
 
     function onMouseMove(event) {
 
@@ -302,7 +303,6 @@
         }
         else state++
 
-        console.log(state)
         // console.log(intersects[0].object.name, interactables.children[0].children[0].material)
       }
     }
@@ -329,25 +329,25 @@
         interactables.remove(interactables.children[0]);
       }
 
-      if (state==0) {
+      if (state == 0) {
         interactables.add(foundationMesh);
       }
-      else if (state==1){
+      else if (state == 1) {
         interactables.add(HotdogBuilding)
       }
-      else if (state==2){
+      else if (state == 2) {
         interactables.add(DonutBuilding)
       }
-      else if (state==3){
+      else if (state == 3) {
         interactables.add(IceCreamBuilding)
       }
-      else if (state==4){
+      else if (state == 4) {
         interactables.add(ShortBuilding)
       }
-      else if (state==5){
+      else if (state == 5) {
         interactables.add(TallBuilding)
       }
-      
+
 
       raycastObjects = interactables.children
     }
@@ -357,8 +357,10 @@
       deltaTime = clock.getDelta();
       totalTime += deltaTime;
       loadObjects()
-      resetMaterials();
-      hover();
+      if (!isTouch) {
+        resetMaterials();
+        hover();
+      }
       update();
       render();
     }
