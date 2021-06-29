@@ -35,9 +35,13 @@
 
     var arToolkitSource, arToolkitContext;
 
-    var markerRoot1;
+    var environment, interactables;
 
     var raycastObjects = []
+
+    var HotdogBuilding, DonutBuilding, IceCreamBuilding, ShortBuilding, TallBuilding;
+
+    let state = 0;
 
     var material1, mesh1;
 
@@ -77,10 +81,10 @@
       });
 
       function onResize() {
-        arToolkitSource.onResize()
-        arToolkitSource.copySizeTo(renderer.domElement)
+        arToolkitSource.onResizeElement()
+        arToolkitSource.copyElementSizeTo(renderer.domElement)
         if (arToolkitContext.arController !== null) {
-          arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)
+          arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
         }
       }
 
@@ -113,9 +117,9 @@
       ////////////////////////////////////////////////////////////
 
       // build markerControls
-      markerRoot1 = new THREE.Group();
-      scene.add(markerRoot1);
-      let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoot1, {
+      environment = new THREE.Group();
+      scene.add(environment);
+      let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, environment, {
         type: 'pattern', patternUrl: "data/kanji.patt",
       })
 
@@ -128,8 +132,8 @@
 
       let loader = new THREE.TextureLoader();
 
-      let sceneGroup = new THREE.Group();
-      markerRoot1.add(sceneGroup);
+      interactables = new THREE.Group();
+      environment.add(interactables);
 
       let texture = loader.load("images/color-grid.png");
       // repeat texture
@@ -144,32 +148,86 @@
       shadowMesh.position.y = 1;
       shadowMesh.castShadow = true;
       shadowMesh.receiveShadow = true;
-      sceneGroup.add(shadowMesh);
-      raycastObjects.push(shadowMesh);
+      // interactables.add(shadowMesh);
+      shadowMesh.name = "Torus";
 
-      // let floader = new THREE.FBXLoader();
-      // floader.load('assets/fbx/town.fbx', function (object) {
-      //   object.rotation.x=-Math.PI
-      //   object.scale.multiplyScalar(0.0001); 
-      //   // object.position.y=-50
-      //   sceneGroup.add(object);
-      // }, undefined, function (e) {
-      //   console.error(e);
-      // });
+      let floader = new THREE.FBXLoader();
+      floader.load('assets/fbx/HotdogBuilding.fbx', function (object) {
+        object.scale.multiplyScalar(0.00045);
+        object.name = "Building"
+        object.children.forEach(child => {
+          child.name = "Building"
+        })
+        HotdogBuilding = object
+      }, undefined, function (e) {
+        console.error(e);
+      });
 
-      let floorGeometry = new THREE.PlaneGeometry(20, 20);
-      let floorMaterial = new THREE.ShadowMaterial();
-      floorMaterial.opacity = 0.3;
-      let floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
-      floorMesh.rotation.x = -Math.PI / 2;
-      floorMesh.receiveShadow = true;
-      sceneGroup.add(floorMesh);
+      floader.load('assets/fbx/DonutBuilding.fbx', function (object) {
+        object.scale.multiplyScalar(0.00045);
+        object.name = "Building"
+        object.children.forEach(child => {
+          child.name = "Building"
+        })
+        DonutBuilding = object
+      }, undefined, function (e) {
+        console.error(e);
+      });
+
+      floader.load('assets/fbx/IceCreamBuilding.fbx', function (object) {
+        object.scale.multiplyScalar(0.00045);
+        object.name = "Building"
+        object.children.forEach(child => {
+          child.name = "Building"
+        })
+        IceCreamBuilding = object
+      }, undefined, function (e) {
+        console.error(e);
+      });
+
+      floader.load('assets/fbx/ShortBuilding.fbx', function (object) {
+        object.scale.multiplyScalar(0.00045);
+        object.name = "Building"
+        object.children.forEach(child => {
+          child.name = "Building"
+        })
+        ShortBuilding = object
+      }, undefined, function (e) {
+        console.error(e);
+      });
+
+
+      floader.load('assets/fbx/TallBuilding.fbx', function (object) {
+        object.scale.multiplyScalar(0.00045);
+        object.name = "Building"
+        object.children.forEach(child => {
+          child.name = "Building"
+        })
+        TallBuilding = object
+      }, undefined, function (e) {
+        console.error(e);
+      });
+
+
+      // let floorGeometry = new THREE.PlaneGeometry(2,2);
+      // let floorMaterial = new THREE.MeshStandardMaterial();
+      // let floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+      // floorMesh.rotation.x = -Math.PI / 2;
+      // // floorMesh.receiveShadow = true;
+      // interactables.add(floorMesh);
+
+      let foundationGeometry = new THREE.BoxGeometry(1, 0.1, 1);
+      let foundationMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+      foundationMesh = new THREE.Mesh(foundationGeometry, foundationMaterial);
+      foundationMesh.receiveShadow = true;
+      foundationMesh.position.y = 0.05;
+      foundationMesh.name = "AF"
 
 
       let light = new THREE.PointLight(0xffffff, 1, 100);
       light.position.set(0, 4, 0); // default; light shining from top
       light.castShadow = true;
-      sceneGroup.add(light);
+      environment.add(light);
 
       let lightSphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.1),
@@ -180,12 +238,12 @@
         })
       );
       lightSphere.position.copy(light.position);
-      sceneGroup.add(lightSphere);
+      environment.add(lightSphere);
 
       let ambientLight = new THREE.AmbientLight(0x666666);
-      sceneGroup.add(ambientLight);
+      environment.add(ambientLight);
       // let helper = new THREE.CameraHelper( light.shadow.camera );
-      // sceneGroup.add( helper );
+      // interactables.add( helper );
     }
 
 
@@ -203,15 +261,32 @@
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(raycastObjects, true);
       if (intersects[0]) {
-        intersects[0].object.material.transparent = true
-        intersects[0].object.material.opacity = 0.5
+
+        if (intersects[0].object.name == "AF") {
+          intersects[0].object.material.transparent = true
+          intersects[0].object.material.opacity = 0.5;
+        }
+        if (intersects[0].object.name == "Building") {
+          intersects[0].object.material.forEach(function (child) {
+            child.transparent = true
+            child.opacity = 0.5;
+          });
+        }
       }
     }
 
     function resetMaterials() {
-      for (let i = 0; i < sceneGroup.children.length; i++) {
-        if (sceneGroup.children[i].material) {
-          sceneGroup.children[i].material.opacity = 1.0;
+      for (let i = 0; i < raycastObjects.length; i++) {
+        if (raycastObjects[i].material && raycastObjects[i].name == "AF") {
+          raycastObjects[i].material.opacity = 1;
+        }
+        if (raycastObjects[i] && raycastObjects[i].name == "Building") {
+          raycastObjects[i].children.forEach(function (child) {
+            // console.log(child.name)
+            child.material.forEach(function (material) {
+              material.opacity = 1;
+            });
+          })
         }
       }
     }
@@ -222,21 +297,14 @@
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(raycastObjects, true);
       if (intersects[0]) {
-        if (!clicked) {
-          intersects[0].object.scale.set(0.2, 0.2, 0.2)
-
-          clicked = true
+        if (state == 5) {
+          state = 0
         }
-        else {
-          intersects[0].object.scale.set(1, 1, 1)
+        else state++
 
-          clicked = false
-        }
-
-        console.log(intersects, clicked)
+        console.log(state)
+        // console.log(intersects[0].object.name, interactables.children[0].children[0].material)
       }
-
-      console.log(intersects, clicked)
     }
 
 
@@ -247,22 +315,50 @@
       // update artoolkit on every frame
       if (arToolkitSource.ready !== false)
         arToolkitContext.update(arToolkitSource.domElement);
-
-      shadowMesh.rotation.y -= 0.01;
     }
-
 
     function render() {
       renderer.render(scene, camera);
     }
 
 
+    function loadObjects() {
+      raycastObjects = []
+
+      while (interactables.children.length > 0) {
+        interactables.remove(interactables.children[0]);
+      }
+
+      if (state==0) {
+        interactables.add(foundationMesh);
+      }
+      else if (state==1){
+        interactables.add(HotdogBuilding)
+      }
+      else if (state==2){
+        interactables.add(DonutBuilding)
+      }
+      else if (state==3){
+        interactables.add(IceCreamBuilding)
+      }
+      else if (state==4){
+        interactables.add(ShortBuilding)
+      }
+      else if (state==5){
+        interactables.add(TallBuilding)
+      }
+      
+
+      raycastObjects = interactables.children
+    }
+
     function animate() {
       requestAnimationFrame(animate);
       deltaTime = clock.getDelta();
       totalTime += deltaTime;
-      // resetMaterials();
-      // hover();
+      loadObjects()
+      resetMaterials();
+      hover();
       update();
       render();
     }
