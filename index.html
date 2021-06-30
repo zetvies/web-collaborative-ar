@@ -15,11 +15,12 @@
   <script src="threex/threex-artoolkitcontext.js"></script>
   <script src="threex/threex-arbasecontrols.js"></script>
   <script src="threex/threex-armarkercontrols.js"></script>
-  <script src="threex/threex-domevents.js"></script>
   <!-- include other scripts -->
   <script src="libs/inflate.min.js"></script>
   <script src="libs/FBXLoader.js"></script>
   <script src="libs/OrbitControls.js"></script>
+  <script src="libs/Detector.js"></script>
+  <script src="libs/toon3d.js"></script>
   <script src="libs/jquery-3.6.0.min.js"></script>
 </head>
 
@@ -43,7 +44,9 @@
       var raycastObjects = []
 
       var AF, BF, CF, DF, EF, FF, AB, BB, CB, DB, EB, FB;
-      var HotdogBuilding, DonutBuilding, IceCreamBuilding, ShortBuilding, TallBuilding, floorMesh;
+      var HotdogBuilding, DonutBuilding, IceCreamBuilding, ShortBuilding, TallBuilding;
+      let Player = {}
+      let joystick
 
       let modal = false;
       let vacantTemp, buildingTemp, ownerTemp;
@@ -84,7 +87,11 @@
         }
       };
 
-      var material1, mesh1;
+      let playerList={
+        "Bimo Arsa":{
+
+        }
+      }
 
       let screen = 0;
 
@@ -95,10 +102,47 @@
         initialize();
         animate();
 
+        function playerControl(forward, turn) {
+          radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
+
+          rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
+          rotation = -rotation+Math.PI
+
+          Player.object.rotation.y = rotation
+          Player.forward = radius
+
+          
+          // console.log(playerList)
+          raycastObjects = []
+        }
+
+
+        function movePlayer(dt) {
+          if (Player.forward > 0.3) {
+            Player.object.translateZ(dt * 0.4);
+          }
+
+          if(Player.object.position.x>0.65/2){
+            Player.object.position.x=0.65/2
+          }
+          if(Player.object.position.x<-0.65/2){
+            Player.object.position.x=-0.65/2
+          }
+          if(Player.object.position.z>2.4/2){
+            Player.object.position.z=2.4/2
+          }
+          if(Player.object.position.z<-2.4/2){
+            Player.object.position.z=-2.4/2
+          }
+
+          playerList['Bimo Arsa']={nama:ownerTemp,avatar:Player.object.name,position:Player.object.position,rotation:Player.object.rotation.y}
+        }
+
         function initialize() {
           scene = new THREE.Scene();
 
-          camera = new THREE.PerspectiveCamera();
+          camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
+          // camera.rotation.y=Math.PI/2
           scene.add(camera);
 
           renderer = new THREE.WebGLRenderer({
@@ -171,6 +215,10 @@
           // setup scene
           ////////////////////////////////////////////////////////////
 
+          joystick = new JoyStick({
+            onMove: playerControl
+          });
+
           renderer.shadowMap.enabled = true;
           renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -183,7 +231,13 @@
           let floader = new THREE.FBXLoader();
           floader.load('assets/fbx/HotdogBuilding.fbx', function (object) {
             object.scale.multiplyScalar(0.00028);
-            object.castShadow = true;
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
             HotdogBuilding = object
           }, undefined, function (e) {
             console.error(e);
@@ -191,7 +245,13 @@
 
           floader.load('assets/fbx/DonutBuilding.fbx', function (object) {
             object.scale.multiplyScalar(0.00028);
-            object.castShadow = true;
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
             DonutBuilding = object
           }, undefined, function (e) {
             console.error(e);
@@ -199,7 +259,13 @@
 
           floader.load('assets/fbx/IceCreamBuilding.fbx', function (object) {
             object.scale.multiplyScalar(0.00028);
-            object.castShadow = true;
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
             IceCreamBuilding = object
           }, undefined, function (e) {
             console.error(e);
@@ -207,7 +273,13 @@
 
           floader.load('assets/fbx/ShortBuilding.fbx', function (object) {
             object.scale.multiplyScalar(0.00028);
-            object.castShadow = true;
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
             ShortBuilding = object
           }, undefined, function (e) {
             console.error(e);
@@ -215,18 +287,50 @@
 
           floader.load('assets/fbx/TallBuilding.fbx', function (object) {
             object.scale.multiplyScalar(0.00028);
-            object.castShadow = true;
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
             TallBuilding = object
           }, undefined, function (e) {
             console.error(e);
           });
 
-          AF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
-          BF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
-          CF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
-          DF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
-          EF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
-          FF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+
+          floader.load(`assets/fbx/people/FireFighter.fbx`, function (object) {
+            object.scale.multiplyScalar(0.001)
+
+            object.name = "FireFighter";
+
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = false;
+              }
+            });
+
+            loader.load(`assets/images/SimplePeople_FireFighter_Brown.png`, function (texture) {
+              object.traverse(function (child) {
+                if (child.isMesh) {
+                  child.material.map = texture;
+                }
+              });
+            });
+
+            environment.add(object);
+            Player.object = object;
+          });
+
+
+          AF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+          BF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+          CF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+          DF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+          EF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+          FF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
 
           AF.name = "AF"
           BF.name = "BF"
@@ -257,18 +361,14 @@
 
 
           let light = new THREE.PointLight(0xffffff, 1, 50);
-          light.position.set(8, 4, 0); // default; light shining from top
+          light.position.set(8, 8, 0); // default; light shining from top
           light.castShadow = true;
           environment.add(light);
-          let light2 = new THREE.PointLight(0xffffff, 1, 50);
-          light2.position.set(-8, 4, 0); // default; light shining from top
-          light2.castShadow = true;
-          environment.add(light2);
 
           let ambientLight = new THREE.AmbientLight(0x666666);
           environment.add(ambientLight);
-          // let helper = new THREE.CameraHelper( light.shadow.camera );
-          // interactables.add( helper );
+          // let helper = new THREE.CameraHelper( camera );
+          // environment.add( helper );
         }
 
         function onMouseMove(event) {
@@ -555,9 +655,11 @@
             FB.position.set(0.7, 0.05, 0.8)
             interactables.add(FB)
           }
+
           if (!modal) {
             raycastObjects = interactables.children
           }
+
         }
 
         //HTML Side
@@ -593,18 +695,18 @@
         function actionBuild() {
           state[landTemp] = { vacant: false, building: buildingTemp, owner: ownerTemp }
           modal = false
-          buildingTemp=null
+          buildingTemp = null
         }
 
         function actionDestroy() {
           state[landTemp] = { vacant: true, building: null, owner: "" }
           modal = false
-          buildingTemp=null
+          buildingTemp = null
         }
 
         function closeModal() {
           modal = false
-          buildingTemp=null
+          buildingTemp = null
         }
 
         function loadHTML() {
@@ -659,9 +761,11 @@
         }
 
         function animate() {
-          requestAnimationFrame(animate);
           deltaTime = clock.getDelta();
           totalTime += deltaTime;
+
+          requestAnimationFrame(animate);
+
           loadCanvas()
           loadHTML()
           // if (!isMobile()) {
@@ -669,6 +773,9 @@
           //   hover();
           // }
           update();
+
+          //navigation
+          movePlayer(deltaTime)
           render();
         }
 
