@@ -20,7 +20,8 @@
   <script src="libs/FBXLoader.js"></script>
   <script src="libs/OrbitControls.js"></script>
   <script src="libs/Detector.js"></script>
-  <script src="libs/toon3d.js"></script>
+  <!-- <script src="libs/toon3d.js"></script> -->
+  <script src="libs/joy.js"></script>
   <script src="libs/jquery-3.6.0.min.js"></script>
 </head>
 
@@ -31,7 +32,8 @@
   Based on the AR.js library and examples created by Jerome Etienne: https://github.com/jeromeetienne/AR.js/
 -->
 
-
+  <div id="joyDiv" onmousedown="joystickStart()" ontouchstart="joystickStart()"
+    style="width:100px;height:100px;bottom:10px;left:50%;margin-left:-50px;position:absolute;z-index: 10;"></div>
   <div id="container">
     <script>
 
@@ -102,29 +104,19 @@
         initialize();
         animate();
 
-        function playerControl(forward, turn) {
-          radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
 
-          rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
-          rotation = -rotation + Math.PI
+        // Create JoyStick object into the DIV 'joyDiv'
+        var joy = new JoyStick('joyDiv');
 
-          Player.object.rotation.y = rotation
-          Player.forward = radius
-
-
-          console.log(playerList)
-
-          raycastObjects = []
-
-          playerList['Bimo Arsa'] = { nama: ownerTemp, avatar: Player.object.name, position: Player.object.position, rotation: Player.object.rotation.y }
-
-
-          if (radius > 0) {
-            isJoystickUsed = true
-          }
-          else isJoystickUsed = false
+        let turn, forward, radius, rotation
+        function joystickStart() {
+          isJoystickUsed = true
         }
 
+        function joystickStop() {
+          isJoystickUsed = false
+          Player.forward=0
+        }
 
         function movePlayer(dt) {
           if (Player.forward > 0.3) {
@@ -224,9 +216,9 @@
           // setup scene
           ////////////////////////////////////////////////////////////
 
-          joystick = new JoyStick({
-            onMove: playerControl
-          });
+          // joystick = new JoyStick({
+          //   onMove: playerControl
+          // });
 
           renderer.shadowMap.enabled = true;
           renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -381,7 +373,6 @@
         }
 
         function onMouseMove(event) {
-
           // calculate mouse position in normalized device coordinates
           // (-1 to +1) for both components
 
@@ -418,13 +409,47 @@
         }
 
 
-        window.addEventListener('mousemove', onMouseMove, false);
+        window.addEventListener('mouseup', joystickStop);
+        window.addEventListener('touchend', joystickStop);
+        window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('click', onClick);
 
         function update() {
           // update artoolkit on every frame
           if (arToolkitSource.ready !== false)
             arToolkitContext.update(arToolkitSource.domElement);
+
+          if (isJoystickUsed) {
+            turn = joy.GetPosY() / 50 * (joy.GetPosX() - 50) / 25;
+            forward = joy.GetPosX() / 50 * (50 - joy.GetPosY()) / 25;
+
+            if (turn > 1) {
+              turn = 1
+            }
+            if (turn < -1) {
+              turn = -1
+            }
+            if (forward > 1) {
+              forward = 1
+            }
+            if (forward < -1) {
+              forward = -1
+            }
+            console.log(turn, forward)
+            radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
+            Player.forward = radius
+
+            rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
+            rotation = -rotation + Math.PI
+
+            Player.object.rotation.y = rotation
+
+            raycastObjects = []
+
+            playerList['Bimo Arsa'] = { nama: ownerTemp, avatar: Player.object.name, position: Player.object.position, rotation: Player.object.rotation.y }
+
+            raycastObjects = []
+          }
         }
 
         function render() {
@@ -868,7 +893,6 @@
       </div>
     </div>
   </div>
-
   <!-- <script>
     
         function isMobile() {

@@ -21,6 +21,9 @@ canvas {
   z-index: 1;
 }
 
+#joyDiv{
+  width:200px;height:200px;margin-bottom:20px;bottom:5%:
+}
 .ownedImage {
   height: 240px;
   background-color: #3c3c3c;
