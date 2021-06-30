@@ -46,7 +46,7 @@
       var AF, BF, CF, DF, EF, FF, AB, BB, CB, DB, EB, FB;
       var HotdogBuilding, DonutBuilding, IceCreamBuilding, ShortBuilding, TallBuilding;
       let Player = {}
-      let joystick
+      let joystick, isJoystickUsed
 
       let modal = false;
       let vacantTemp, buildingTemp, ownerTemp;
@@ -87,8 +87,8 @@
         }
       };
 
-      let playerList={
-        "Bimo Arsa":{
+      let playerList = {
+        "Bimo Arsa": {
 
         }
       }
@@ -106,14 +106,23 @@
           radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
 
           rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
-          rotation = -rotation+Math.PI
+          rotation = -rotation + Math.PI
 
           Player.object.rotation.y = rotation
           Player.forward = radius
 
-          
-          // console.log(playerList)
+
+          console.log(playerList)
+
           raycastObjects = []
+
+          playerList['Bimo Arsa'] = { nama: ownerTemp, avatar: Player.object.name, position: Player.object.position, rotation: Player.object.rotation.y }
+
+
+          if (radius > 0) {
+            isJoystickUsed = true
+          }
+          else isJoystickUsed = false
         }
 
 
@@ -122,20 +131,20 @@
             Player.object.translateZ(dt * 0.4);
           }
 
-          if(Player.object.position.x>0.65/2){
-            Player.object.position.x=0.65/2
+          if (isJoystickUsed) {
+            if (Player.object.position.x > 0.65 / 2) {
+              Player.object.position.x = 0.65 / 2
+            }
+            if (Player.object.position.x < -0.65 / 2) {
+              Player.object.position.x = -0.65 / 2
+            }
+            if (Player.object.position.z > 2.4 / 2) {
+              Player.object.position.z = 2.4 / 2
+            }
+            if (Player.object.position.z < -2.4 / 2) {
+              Player.object.position.z = -2.4 / 2
+            }
           }
-          if(Player.object.position.x<-0.65/2){
-            Player.object.position.x=-0.65/2
-          }
-          if(Player.object.position.z>2.4/2){
-            Player.object.position.z=2.4/2
-          }
-          if(Player.object.position.z<-2.4/2){
-            Player.object.position.z=-2.4/2
-          }
-
-          playerList['Bimo Arsa']={nama:ownerTemp,avatar:Player.object.name,position:Player.object.position,rotation:Player.object.rotation.y}
         }
 
         function initialize() {
